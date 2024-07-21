@@ -1,4 +1,4 @@
-//begin script when window loads
+I'm//begin script when window loads
 window.onload = setMap();
 
 //set up choropleth map
@@ -17,7 +17,7 @@ function setMap(){
     //Example 2.1 line 15...create Albers equal area conic projection centered on France
     var projection = d3.geoAlbers()
         .center([9.09, 44.51])
-        .rotate([0, 1.82, 0]) 
+        .rotate([85, 0, 0]) 
         .parallels([0.00, 52.72])   
         .scale(8000)   
         .translate([width / 2, height / 2]);
