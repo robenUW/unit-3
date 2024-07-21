@@ -2,7 +2,7 @@
 
 .axis path,
 .axis line {
-    fill: none;
+    fill: gray;
     stroke: black;
     stroke-width: 1px;
     shape-rendering: crispEdges;
@@ -17,4 +17,17 @@
     font-family: sans-serif;
     font-size: 1.5em;
     font-weight: bold;
+}
+.gratLines {
+    fill: none;
+    stroke: #999;
+    stroke-width: 1px;
+}
+
+.gratBackground {
+    fill: #1f3b74;
+}
+
+.map {
+    border: medium solid #999;
 }
