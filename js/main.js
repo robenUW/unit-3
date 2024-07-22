@@ -1,4 +1,4 @@
-I'm//begin script when window loads
+//begin script when window loads
 window.onload = setMap();
 
 //set up choropleth map
