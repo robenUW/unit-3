@@ -16,10 +16,14 @@ function setMap(){
 
     //Example 2.1 line 15...create Albers equal area conic projection centered on France
     var projection = d3.geoAlbers()
-        .center([9.09, 44.51])
-        .rotate([85, 1.82, 0]) 
-        .parallels([0.00, 52.72])   
-        .scale(8000)   
+        .center([10.91, 42.69])
+
+        .rotate([84.64, 1, 0])
+        
+        .parallels([29.5, 45.5])
+        
+        .scale(4671.72)
+        
         .translate([width / 2, height / 2]);
 
     var path = d3.geoPath()
