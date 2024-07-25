@@ -16,14 +16,10 @@ function setMap(){
 
     //Example 2.1 line 15...create Albers equal area conic projection centered on France
     var projection = d3.geoAlbers()
-        .center([10.91, 42.69])
-
-        .rotate([84.64, 1, 0])
-        
-        .parallels([29.5, 45.5])
-        
-        .scale(4671.72)
-        
+        .center([0, 40.7128]) // Centered on the latitude of New York
+        .rotate([74.0060, 0]) // Rotated to the longitude of New York; note the sign inversion
+        .parallels([41, 44]) // Roughly the latitudinal extent of New York State
+        .scale(4671.72) // Adjust scale as needed for your visualization
         .translate([width / 2, height / 2]);
 
     var path = d3.geoPath()
