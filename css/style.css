@@ -8,7 +8,7 @@
 }
 
 .usa {
-    fill: #aba6a6;
+    fill: #cfc7c7;
     stroke: #605a5a;
     stroke-width: 2px;
 }
@@ -31,23 +31,6 @@
 
 .map {
     border: medium solid #999;
-}
-
-.dropdown {
-    position: absolute;
-    top: 30px;
-    left: 40px;
-    z-index: 10;
-    font-family: sans-serif;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 2px;
-    border: 1px solid #999;
-    box-shadow: 2px 2px 4px #999;
-}
-
-option {
-    font-weight: normal;
 }
 
 .regions {
@@ -95,4 +78,22 @@ option {
     font-family: sans-serif;
     font-size: 0.8em;
     fill: #999;
+}
+
+
+.dropdown {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    z-index: 10;
+    font-family: sans-serif;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 2px;
+    border: 1px solid #999;
+    box-shadow: 2px 2px 4px #999;
+}
+
+option {
+    font-weight: normal;
 }
