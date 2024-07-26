@@ -10,7 +10,7 @@ window.onload = setMap();
 //set up choropleth map
 function setMap(){
     //map frame dimensions
-    var width = 960,
+    var width = window.innerWidth * 0.425,
         height = 800;
 
     //create new svg container for the map
@@ -22,10 +22,10 @@ function setMap(){
 
     //Example 2.1 line 15...create Albers equal area conic projection centered on France
     var projection = d3.geoAlbers()
-        .center([0, 40.7128]) // Centered on the latitude of New York
-        .rotate([74.0060, 0]) // Rotated to the longitude of New York; note the sign inversion
+        .center([0, 43]) // Centered on the latitude of New York
+        .rotate([76, 0]) // Rotated to the longitude of New York; note the sign inversion
         .parallels([41, 44]) // Roughly the latitudinal extent of New York State
-        .scale(4671.72) // Adjust scale as needed for your visualization
+        .scale(5000) // Adjust scale as needed for your visualization
         .translate([width / 2, height / 2]);
 
     var path = d3.geoPath()
@@ -36,19 +36,34 @@ function setMap(){
     var promises = [];    
     promises.push(d3.csv("data/DeerWMU.csv")); //load attributes from csv    
     promises.push(d3.json("data/WMU_NY_WGS84.topojson")); //load chlropleth spatial data 
+    promises.push(d3.json("data/US_State_Boundaries.topojson")); //load background data
+    promises.push(d3.json("data/Canada.topojson")); //load background data
     Promise.all(promises).then(callback);
 
     function callback(data) {
-        var csvData = data[0], ny = data[1];
+        var csvData = data[0], ny = data[1]; usa = data[2];ca = data[3]
 
         //place graticule on the map
         setGraticule(map, path);
 
-        //translate europe TopoJSON
-        var newyorkWMU = topojson.feature(ny, ny.objects.WMU_NY_WGS84).features;
+        //translate TopoJSONs
+        var usastates = topojson.feature(usa, usa.objects.US_State_Boundaries),
+            canada = topojson.feature(ca, ca.objects.Canada),
+            newyorkWMU = topojson.feature(ny, ny.objects.WMU_NY_WGS84).features;
 
-        //add europe countries to map 
+        
+        //add US States to map
+        var states = map.append("path")
+            .datum(usastates)
+            .attr("class", "usa")
+            .attr("d", path); 
 
+        //add Canada to map
+        var canprov = map.append("path")
+            .datum(canada)
+            .attr("class", "ca")
+            .attr("d", path); 
+    
         //join csv
         newyorkWMU = joinData(newyorkWMU,csvData);
 
@@ -58,6 +73,9 @@ function setMap(){
     
         //add enumeration units to map
         setEnumerationUnits(newyorkWMU, map, path, colorScale);
+
+        //add coordinated visualization to the map
+        setChart(csvData, colorScale);     
 
     };
 }; //end setMap
@@ -84,43 +102,34 @@ function setGraticule(map, path){
         .attr("d", path); //project graticule lines
 };
 
-
-//function to create color scale generator
+//Example 1.4 line 11...function to create color scale generator
 function makeColorScale(data){
     var colorClasses = [
-        "#D4B9DA",
-        "#C994C7",
-        "#DF65B0",
-        "#DD1C77",
-        "#980043"
+        "#EADDCA",
+        "#E1C16E",
+        "#CD7F32",
+        "#800020",
+
     ];
 
     //create color scale generator
-    var colorScale = d3.scaleThreshold()
+    var colorScale = d3.scaleQuantile()
         .range(colorClasses);
 
-    //build array of all values of the expressed attribute
-    var domainArray = [];
-    for (var i=0; i<data.length; i++){
-        var val = parseFloat(data[i][expressed]);
-        domainArray.push(val);
-    };
-
-    //cluster data using ckmeans clustering algorithm to create natural breaks
-    var clusters = ss.ckmeans(domainArray, 5);
-    //reset domain array to cluster minimums
-    domainArray = clusters.map(function(d){
-        return d3.min(d);
-    });
-    //remove first value from domain array to create class breakpoints
-    domainArray.shift();
-
-    //assign array of last 4 cluster minimums as domain
-    colorScale.domain(domainArray);
-
+    //build two-value array of minimum and maximum expressed attribute values
+    var minmax = [
+        d3.min(data, function(d) { return parseFloat(d[expressed]); }),
+        d3.max(data, function(d) { return parseFloat(d[expressed]); })
+    ];
+    console.log(data)
+    console.log(minmax)
+    //assign two-value array as scale domain
+    colorScale.domain(minmax);
+    console.log(colorScale.quantiles())
     return colorScale;
-};
 
+
+};
 function joinData(newyorkWMU, csvData){
     //loop through csv to assign each set of csv attribute values to geojson region
     for (var i=0; i<csvData.length; i++){
@@ -154,18 +163,114 @@ function joinData(newyorkWMU, csvData){
 };
 
 
+//Example 1.3 line 38
+function setEnumerationUnits(newyorkWMU, map, path, colorScale){
+     //add Europe countries to map
 
+    var countries = map.append("path")
+     .datum(usa)
+     .attr("class", "usa")
+     .attr("d", path);
 
-function setEnumerationUnits(newyorkWMU, map, path){
     //add France regions to map
     var wmus = map.selectAll(".wmus")
         .data(newyorkWMU)
         .enter()
         .append("path")
         .attr("class", function(d){
-            return "wmus" + d.properties.UNIT;
+            return "regions " + d.properties.UNIT;
         })
-        .attr("d", path);
+        .attr("d", path)
+            .style("fill", function(d){
+                var value = d.properties[expressed];
+                if (value) {
+                    return colorScale(d.properties[expressed]);
+                } else {
+                    return "#ccc";
+                }
+        });
+};
+
+
+//function to create coordinated bar chart
+function setChart(csvData, colorScale){
+    //chart frame dimensions
+    var chartWidth = window.innerWidth * 0.425,
+        chartHeight = 473,
+        leftPadding = 30,
+        rightPadding = 2,
+        topBottomPadding = 5,
+        chartInnerWidth = chartWidth - leftPadding - rightPadding,
+        chartInnerHeight = chartHeight - topBottomPadding * 2,
+        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+
+    //create a second svg element to hold the bar chart
+    var chart = d3.select("body")
+        .append("svg")
+        .attr("width", chartWidth)
+        .attr("height", chartHeight)
+        .attr("class", "chart");
+
+    //create a rectangle for chart background fill
+    var chartBackground = chart.append("rect")
+        .attr("class", "chartBackground")
+        .attr("width", chartInnerWidth)
+        .attr("height", chartInnerHeight)
+        .attr("transform", translate);
+
+    //create a scale to size bars proportionally to frame and for axis
+    var yScale = d3.scaleLinear()
+        .range([463, 0])
+        .domain([0, 5000]);
+
+    //set bars for each province
+    var bars = chart.selectAll(".bar")
+        .data(csvData)
+        .enter()
+        .append("rect")
+        .sort(function(a, b){
+            return b[expressed]-a[expressed]
+        })
+        .attr("class", function(d){
+            return "bar " + d.UNIT;
+        })
+        .attr("width", chartInnerWidth / csvData.length - 1)
+        .attr("x", function(d, i){
+            return i * (chartInnerWidth / csvData.length) + leftPadding;
+        })
+        .attr("height", function(d, i){
+            return 463 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d, i){
+            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+        })
+        .style("fill", function(d){
+            return colorScale(d[expressed]);
+        });
+
+    //create a text element for the chart title
+    var chartTitle = chart.append("text")
+        .attr("x", 40)
+        .attr("y", 40)
+        .attr("class", "chartTitle")
+        .text("Number of Variable " + expressed[3] + " in each region");
+
+    //create vertical axis generator
+    var yAxis = d3.axisLeft()
+        .scale(yScale)       
+
+    //place axis
+    var axis = chart.append("g")
+        .attr("class", "axis")
+        .attr("transform", translate)
+        .call(yAxis);
+
+    //create frame for chart border
+    var chartFrame = chart.append("rect")
+        .attr("class", "chartFrame")
+        .attr("width", chartInnerWidth)
+        .attr("height", chartInnerHeight)
+        .attr("transform", translate);
 };
 
 
