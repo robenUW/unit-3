@@ -180,14 +180,14 @@ function joinData(newyorkWMU, csvData){
 
 //Example 1.3 line 38
 function setEnumerationUnits(newyorkWMU, map, path, colorScale){
-     //add Europe countries to map
+     //add surrounding countries to map
 
     var countries = map.append("path")
      .datum(usa)
      .attr("class", "usa")
      .attr("d", path);
 
-    //add France regions to map
+    //add NY WMUs regions to map
     var wmus = map.selectAll(".wmus")
         .data(newyorkWMU)
         .enter()
@@ -204,8 +204,11 @@ function setEnumerationUnits(newyorkWMU, map, path, colorScale){
                     return "#ccc";
                 }
             })
-        };
+    
+    var desc = wmus.append("desc")
+        .text('{"stroke": "none", "stroke-width": "0px"}');
 
+};
 
 //function to create coordinated bar chart
 function setChart(csvData, colorScale){
@@ -242,6 +245,7 @@ function setChart(csvData, colorScale){
     
     var desc = bars.append("desc")
         .text('{"stroke": "none", "stroke-width": "0px"}');
+    
 
     //create a text element for the chart title
     var chartTitle = chart.append("text")
@@ -250,7 +254,7 @@ function setChart(csvData, colorScale){
         .attr("class", "chartTitle")
         .text("Harvests: by Year " + expressed);
     
- 
+
 
     //create vertical axis generator
     var yAxis = d3.axisLeft()
@@ -283,7 +287,7 @@ function createDropdown(csvData){
         .attr("class", "dropdown")
         .on("change", function(){
             changeAttribute(this.value, csvData)
-            console.log(this.value,csvData)
+            
         });
 
     //add initial option
@@ -320,6 +324,7 @@ function changeAttribute(attribute, csvData) {
             } else {                
                 return "#ccc";            
             }    
+
 });
 
     //Sort, resize, and recolor bars
@@ -333,6 +338,7 @@ function changeAttribute(attribute, csvData) {
             return i * 20
         })
         .duration(500);
+    
 
     updateChart(bars, csvData.length, colorScale);
 }; //end of changeAttribute()
@@ -351,6 +357,7 @@ function updateChart(bars, n, colorScale){
             return yScale(parseFloat(d[expressed])) + topBottomPadding;
         })
         //color/recolor bars
+    
         .style("fill", function(d){            
             var value = d[expressed];            
             if(value) {                
@@ -360,10 +367,19 @@ function updateChart(bars, n, colorScale){
             }    
     });
 
-    console.log(expressed)
+    
     //at the bottom of updateChart()...add text to chart title
     var chartTitle = d3.select(".chartTitle")
         .text("Harvests: by Year " + expressed);
+};
+
+
+//function to highlight enumeration units and bars
+function highlight(props){
+    //change stroke
+    var selected = d3.selectAll("." + props.WMU_NY_UNIT)
+        .style("stroke", "brown")
+        .style("stroke-width", "2");
 };
 
 
